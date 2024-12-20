@@ -5,6 +5,7 @@
 package com.mycompany.studentmanagementsystem;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import javax.swing.JOptionPane;
@@ -13,7 +14,7 @@ import javax.swing.JOptionPane;
  *
  * @author Eman Hassan
  */
-class Student {
+class SStudent {
     private String id;
     private String firstName;
     private String lastName;
@@ -23,7 +24,7 @@ class Student {
     private String studentClass;
 
     // Private Constructor
-    private Student(StudentBuilder builder) {
+    private SStudent(StudentBuilder builder) {
         this.id = builder.id;
         this.firstName = builder.firstName;
         this.lastName = builder.lastName;
@@ -89,8 +90,8 @@ class Student {
         }
 
         // Build method to return Student object
-        public Student build() {
-            return new Student(this);
+        public SStudent build() {
+            return new SStudent(this);
         }
     }
 }
@@ -366,29 +367,52 @@ public class student extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem3ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        String studentId = id.getText();
-        String firstName = fname1.getText();
-        String lastName = lname.getText();
-        String bloodGroup = blood.getText();
-        String cityValue = city.getText();
-        String phoneNumber = phone.getText();
-        String studentClassValue = cclass.getText();
+          try {
+        // Validate input fields
+        if (id.getText().isEmpty() || fname1.getText().isEmpty() || lname.getText().isEmpty() ||
+            blood.getText().isEmpty() || city.getText().isEmpty() || phone.getText().isEmpty() || 
+            cclass.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill in all fields before updating.");
+            return;
+        }
 
-        // Use StudentBuilder to create a Student object
-        Student student = new Student.StudentBuilder()
-                .setId(studentId)
-                .setFirstName(firstName)
-                .setLastName(lastName)
-                .setBlood(bloodGroup)
-                .setCity(cityValue)
-                .setPhone(phoneNumber)
-                .setStudentClass(studentClassValue)
+        // Create a Student object using the Builder pattern
+        SStudent student = new SStudent.StudentBuilder()
+                .setId(id.getText())
+                .setFirstName(fname1.getText())
+                .setLastName(lname.getText())
+                .setBlood(blood.getText())
+                .setCity(city.getText())
+                .setPhone(phone.getText())
+                .setStudentClass(cclass.getText())
                 .build();
 
-        // Example of using the Student object (e.g., printing or saving to database)
-        JOptionPane.showMessageDialog(this, "Student Created:\n" +
-                "ID: " + student.getId() + "\n" +
-                "Name: " + student.getFirstName() + " " + student.getLastName());
+        // Use PreparedStatement for database update
+        String sql = "UPDATE STUDENT SET stdFirstName = ?, stdLastName = ?, stdBlood = ?, " +
+                     "stdCity = ?, stdPhone = ?, class = ? WHERE id = ?";
+        PreparedStatement pst = conn.prepareStatement(sql);
+        pst.setString(1, student.getFirstName());
+        pst.setString(2, student.getLastName());
+        pst.setString(3, student.getBlood());
+        pst.setString(4, student.getCity());
+        pst.setString(5, student.getPhone());
+        pst.setInt(6, Integer.parseInt(student.getStudentClass()));
+        pst.setString(7, student.getId());
+
+        // Execute the update
+        int rowsUpdated = pst.executeUpdate();
+
+        // Show success message
+        if (rowsUpdated > 0) {
+            JOptionPane.showMessageDialog(this, "Student record updated successfully!");
+        } else {
+            JOptionPane.showMessageDialog(this, "No record found with the given ID.");
+        }
+
+    } catch (Exception e) {
+        // Show error message
+        JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+    }
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
